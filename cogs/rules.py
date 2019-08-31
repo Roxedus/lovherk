@@ -5,12 +5,12 @@ import typing
 import os
 import codecs
 import json
-
+from datetime import datetime
 from cogs.utils.rulemanager import RuleManager
 from discord.ext import commands
 
 
-class Rules:
+class Rules(commands.Cog):
 
     DATA_PATH = 'data/rules/'
 #    EMOJI_PATH = DATA_PATH + 'react_emoji.json'
@@ -49,7 +49,7 @@ class Rules:
                 num = str(lov) + " " + num
             lov = rules.get_settings("default_rule")
 
-        rule_text = rules.get_rule_text(lov)
+        rule_text, date = rules.get_rule_text(lov)
 
         if rule_text is None:
             await ctx.send('**Liste over lovene i lovherket:**\n' +
@@ -81,7 +81,8 @@ class Rules:
                         + partial_rules
                 await ctx.send(partial_rules)
         else:
-            await ctx.send(rule_text)
+            embed = await self._create_embed(rule_text, date)
+            await ctx.send(embed=embed)
 
     @commands.guild_only()
     @commands.has_permissions(manage_messages=True)
@@ -113,7 +114,7 @@ class Rules:
         Sender reglene så de enkelt kan kopieres med formatering.
         """
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
-        rule_text = rules.get_rule_text(lov)
+        rule_text, date = rules.get_rule_text(lov)
 
         if rule_text is None:
             await ctx.send("Sjekk at du skrev riktig.")
@@ -154,7 +155,7 @@ class Rules:
         Setter default regler.
         """
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
-        rule_text = rules.get_rule_text(lov)
+        rule_text, date = rules.get_rule_text(lov)
 
         if rule_text is None:
             await ctx.send(f'Den regelen er ikke i lovherket.\n\n' +
@@ -186,7 +187,7 @@ class Rules:
         Sender en melding som automatisk oppdateres når reglene oppdateres.
         """
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
-        rule_text = rules.get_rule_text(lov)
+        rule_text, date = rules.get_rule_text(lov)
 
         if rule_text is None:
             await ctx.send('Sjekk at reglene finnes.\n' +
@@ -198,7 +199,8 @@ class Rules:
             await ctx.send("Den regelen er helt tom.")
             return
 
-        msg = await ctx.send(rule_text)
+        embed = await self._create_embed(rule_text, date)
+        msg = await ctx.send(embed=embed)
         added = rules.add_link_setting('auto_update',
                                        lov,
                                        f'{self._format_message_link(msg)}')
@@ -320,7 +322,7 @@ class Rules:
         Viser reaksjons-regler fra lovherket.
         """
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
-        rule_text = rules.get_rule_text(lov, alternate=True)
+        rule_text, date = rules.get_rule_text(lov, alternate=True)
         if rule_text is not None:
             await ctx.send("```\n" + rule_text + "\n```")
         else:
@@ -403,6 +405,7 @@ class Rules:
     Events
     """
     # Call rules without using commands
+    @commands.Cog.listener()
     async def on_message(self, message):
 
         if message.author.id == self.bot.user.id:
@@ -431,7 +434,7 @@ class Rules:
         rules = RuleManager(message.guild.id, self.SERVERS_PATH)
 
         lov = rules.get_settings("default_rule")
-        rule_text = rules.get_rule_text(lov)
+        rule_text, date = rules.get_rule_text(lov)
 
         context = message.channel
 
@@ -458,17 +461,20 @@ class Rules:
             return
         await context.send(partial_rules)
 
+    @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
         await self.react_action(payload, True)
 
+    @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
         await self.react_action(payload, False)
 
+    @commands.Cog.listener()
     async def on_raw_reaction_clear(self, payload):
         if payload.message_id not in self._react_messages:
             return
         channel = self.bot.get_channel(payload.channel_id)
-        msg = await channel.get_message(payload.message_id)
+        msg = await channel.fetch_message(payload.message_id)
         await asyncio.sleep(1)
         await msg.add_reaction(self.emoji)
 
@@ -483,12 +489,12 @@ class Rules:
         if str(payload.emoji) == self.emoji:
             if not added and payload.user_id == self.bot.user.id:
                 channel = self.bot.get_channel(payload.channel_id)
-                msg = await channel.get_message(payload.message_id)
+                msg = await channel.fetch_message(payload.message_id)
                 await msg.add_reaction(self.emoji)
 
             if added and payload.user_id != self.bot.user.id:
                 channel = self.bot.get_channel(payload.channel_id)
-                msg = await channel.get_message(payload.message_id)
+                msg = await channel.fetch_message(payload.message_id)
                 user = self.bot.get_user(payload.user_id)
                 try:
                     await msg.remove_reaction(self.emoji, user)
@@ -499,7 +505,7 @@ class Rules:
         else:
             if added and payload.user_id != self.bot.user.id:
                 channel = self.bot.get_channel(payload.channel_id)
-                msg = await channel.get_message(payload.message_id)
+                msg = await channel.fetch_message(payload.message_id)
                 await msg.clear_reactions()
 
         if str(payload.emoji) == self.emoji:
@@ -531,7 +537,7 @@ class Rules:
             return None
 
         try:
-            msg = await channel.get_message(message_id)
+            msg = await channel.fetch_message(message_id)
             return msg
         except:
             return None
@@ -570,9 +576,10 @@ class Rules:
         if rule_name is None:
             return
 
-        rule_text = rules.get_rule_text(rule_name, alternate=True)
+        rule_text, date = rules.get_rule_text(rule_name, alternate=True)
         try:
-            await user.send(rule_text)
+            embed = await self._create_embed(rule_text, date)
+            await user.send(embed=embed)
         except discord.Forbidden:
             await msg.channel.send(f"I can't send you messages {user.mention}")
 
@@ -589,14 +596,45 @@ class Rules:
                                    ' hvis ikke fjern den med `§auto fjern`')
                     continue
 
-                updated_text = rules.get_rule_text(message["name"])
+                updated_text, date = rules.get_rule_text(message["name"])
                 if updated_text is None:
                     await ctx.send('Fant ikke en regel med følgende navn:\n' +
                                    f'{message["name"]}.')
                     continue
 
                 await asyncio.sleep(2)
-                await msg.edit(content=updated_text)
+                embed = await self._create_embed(updated_text, date)
+                await msg.edit(content=None, embed=embed)
+
+    async def _create_embed(self, text, date):
+        avatar = self.bot.user.avatar_url_as(format=None,
+                                             static_format='png',
+                                             size=1024)
+
+        embed = discord.Embed(color=0xD9C04D)
+        embed.set_author(name=self.bot.user.name, icon_url=avatar)
+        embed.description = text
+        embed.set_footer(text='Sist oppdatert')
+        embed.timestamp = datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
+
+        return embed
+
+    @commands.command(name='embed', hidden=True)
+    async def _test(self, ctx):
+        try:
+            embed = discord.Embed(title="Grunnreglene for /r/Norge", colour=discord.Colour(0xD9C04D), timestamp=datetime.now())
+
+            embed.set_author(name="LovHerket", icon_url="https://images-ext-2.discordapp.net/external/CLn-yVj427nAOadeqchtoKz4O2KZ0hNKP6kL0g6zv_c/%3Fsize%3D1024/https/cdn.discordapp.com/avatars/413267882496098305/3dc2c25811a515257399c6b5144b7700.png")
+            embed.set_footer(text="Sist oppdatert")
+
+            embed.add_field(name="Generelt", value="**§  1**: Denne discordserveren er norskspråklig, så vi holder oss til norsk så langt det går.*\n**§  2**: Sjekk pinned messages, her finner du både informasjon og underholdning.\n")
+            embed.add_field(name="Krav til oppførsel", value="**§  3**: Ikke spam - vi slår særlig ned på pingspam. \n**§  4**: Hold deg til riktig kanal. \n**§  5**: Forhold deg til norsk lov. \n**§  6**: Ingen rasisme, homofobi, antisemittisme, diskriminering eller andre hatytringer.\n**§  7**: Ingen personangrep, ingen doxxing. \n**§  8**: Ikke lag kvalme eller oppfør deg på en måte som kun virker tergende og forstyrrende. \n**§  9**: Ingen heksejaging/brigadering.\n**§ 10**: Ikke noe støtende eller ubehagelige megmeger/media (Eksempler: Mobbing, gore, unødvendig slemhet) eller pornografi.")
+            embed.add_field(name="Diverse", value="**§ 11**: Ingen posting av invitasjonslinker til andre discordservere uten godkjenning fra mods/admins (bruk gjerne <@372155256341135360> for dette). \n**§ 12**: <#298511909236375552> har noe annerledes håndheving av visse regler, så se pin i kanalen for egne regler.\n**§ 13**: NSFW megmeger kan postes i <#398969290662871041>, men vær anstendig. NSFL innhold er ikke tillatt. \n**§ 14**: Moderering blir ikke diskutert offentlig, dette tas gjennom <@372155256341135360>.")
+
+            msg = await ctx.send(embed=embed)
+            return msg
+        except Exception as e:
+            print(e)
 
 
 def remove_duplicates(dupe_list):
