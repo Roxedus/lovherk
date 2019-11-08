@@ -14,46 +14,46 @@ class Misc(commands.Cog):
 
     @commands.has_permissions(manage_messages=True)
     @commands.group(invoke_without_command=True)
-    async def si(self, ctx, *, message: str=None):
+    async def say(self, ctx, *, message: str=None):
         """
-        Får botten til å si det du sier.
+        Bot replies with the message
         """
         if message is not None:
             await ctx.send(message)
 
     @commands.guild_only()
     @commands.has_permissions(manage_messages=True)
-    @si.command()
-    async def slett(self, ctx, *, message: str=None):
+    @say.command()
+    async def delete(self, ctx, *, message: str=None):
         """
-        Får botten til å si det du sier og sletter den originale meldingen.
+        Bot replies with the message, and deletes the triggering message
         """
         if message is not None:
             try:
                 await ctx.message.delete()
                 await ctx.send(message)
             except discord.Forbidden:
-                await ctx.send('Jeg trenger tillatelse til å slette meldinger')
+                await ctx.send('I need permissions to delete messages')
 
     @commands.guild_only()
     @commands.has_permissions(manage_messages=True)
     @commands.command()
-    async def kanal(self, ctx, *, channel: str=None):
+    async def channel(self, ctx, *, channel: str=None):
         """
-        Ber brukere gå til en annen kanal.
+        Asks users to go to another channel.
         """
         if channel is None:
             return
         try:
             await ctx.message.delete()
-            message = f'Ser ut som om du/dere snakker om noe som kanskje ' \
-                + f'passer bedre i {channel}. Vi hadde satt pris på '\
-                + f'om du/dere kunne flytte over til {channel} slik ' \
-                + f'at sørveren blir mest mulig oversiktlig. Takk :)'
+            message = f'Looks like the topic in this discussion ' \
+                + f'fits better in {channel}. We would appreciate if '\
+                + f'you could move to  {channel} so ' \
+                + f'the server is easier to read'
             await ctx.send(message)
 
         except discord.Forbidden:
-            await ctx.send('Jeg trenger tillatelse til å slette meldinger')
+            await ctx.send('I need permissions to delete messages')
 
     @commands.command(name='ping', hidden=True)
     async def _ping(self, ctx):
@@ -87,18 +87,17 @@ class Misc(commands.Cog):
     @commands.command()
     async def howto(self, ctx, *, channel: str=None):
         """
-        Hvordan bruke LovHerket
+        How to use
         """
         avatar = self.bot.user.avatar_url_as(format=None,
                                              static_format='png',
                                              size=1024)
-        howto = f'[Instruksjoner på Github]' \
-            + f'(https://github.com/Ev-1/lovherk/blob/master/HOWTO.md).'
+        howto = f'Coming soon'
 
         embed = discord.Embed(color=0xD9C04D)
         embed.set_author(name=self.bot.user.name, icon_url=avatar)
         embed.set_thumbnail(url=avatar)
-        embed.add_field(name="Hvordan bruke lovherket",
+        embed.add_field(name="How to use",
                         value=howto, inline=False)
         await ctx.send(embed=embed)
 
@@ -111,25 +110,22 @@ class Misc(commands.Cog):
         avatar = self.bot.user.avatar_url_as(format=None,
                                              static_format='png',
                                              size=1024)
-        infotext = f'En bot som holder kontroll på reglene i' \
-            + f'/r/Norge sin [discordserver](https://discord.gg/UeP2tH6).'
+        infotext = f'A bot helping to enforce rules.'
 
         embed = discord.Embed(color=0xD9C04D)
         embed.set_author(name=self.bot.user.name, icon_url=avatar)
         embed.set_thumbnail(url=avatar)
-        embed.add_field(name="Hva?",
+        embed.add_field(name="What",
                         value=infotext, inline=False)
-        embed.add_field(name="Hvorfor?",
-                        value="Fordi Even ville lære seg å lage bot.",
+        embed.add_field(name="How?",
+                        value=f"**Python:** [{platform.python_version()}](https://www.python.org/)\n"
+                              f"**Discord.py:** [{discord.__version__}](https://github.com/Rapptz/discord.py)",
                         inline=True)
-        embed.add_field(name="Hvordan?",
-                        value=f"**Python:** [{platform.python_version()}](https://www.python.org/)\n**Discord.py:** [{discord.__version__}](https://github.com/Rapptz/discord.py)",
-                        inline=True)
-        embed.add_field(name="Kildekode",
+        embed.add_field(name="Sourcecode",
                         value="[Github](https://github.com/Ev-1/lovherk).",
                         inline=True)
         embed.set_footer(icon_url="https://i.imgur.com/dE6JaeT.gif",
-                         text="Laget av Even :)")
+                         text="Made by Even :)")
         await ctx.send(embed=embed)
 
 

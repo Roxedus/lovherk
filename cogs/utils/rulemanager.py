@@ -3,6 +3,7 @@ import codecs
 import json
 from datetime import datetime
 
+
 class RuleManager:
 
     SETTINGS_JSON = {

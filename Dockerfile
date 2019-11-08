@@ -1,11 +1,13 @@
-FROM amd64/python:3.7.3-alpine
+FROM python:3.7-alpine3.10
 
-WORKDIR /lovherk
+LABEL maintainer="Roxedus"
 
-COPY requirements.txt ./
+COPY / /app
 
-RUN python3 -m pip install -r requirements.txt
+RUN python3 -m pip install -r /app/requirements.txt
 
-COPY . .
+WORKDIR /app
 
-CMD ["python3", "lovherk.py"]
+CMD cp config.json.example config.json && ln -sf config.json /config/config.json && ln -sf /app/data /config && python3 /app/bot.py
+
+VOLUME /config

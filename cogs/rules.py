@@ -33,11 +33,11 @@ class Rules(commands.Cog):
         self.emoji = '\N{INCOMING ENVELOPE}'
 
     @commands.guild_only()
-    @commands.command(name="lov")
+    @commands.command(name="rule")
     async def rules(self, ctx,
                     lov: typing.Union[int, str]=None, *, num: str=None):
         """
-        Se reglene i lovherket.
+        Show the rules
         """
 
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
@@ -52,12 +52,12 @@ class Rules(commands.Cog):
         rule_text, date = rules.get_rule_text(lov)
 
         if rule_text is None:
-            await ctx.send('**Liste over lovene i lovherket:**\n' +
+            await ctx.send('**List of rules:**\n' +
                            f'{rules.get_rules_formatted()}')
             return
 
         if rule_text == "":
-            await ctx.send("Denne regelen er helt tom.")
+            await ctx.send("This rule is empty.")
             return
 
         # Get only specified rules
@@ -74,10 +74,10 @@ class Rules(commands.Cog):
                     partial_rules += m.groups()[0] + "\n"
 
             if partial_rules == "":
-                await ctx.send(f'Fant ikke reglene du ser etter')
+                await ctx.send(f'Didn\'t find that rule')
             else:
                 if lov != rules.get_settings("default_rule"):
-                    partial_rules = f'**I reglene for {lov}:**\n' \
+                    partial_rules = f'**In the rules for {lov}:**\n' \
                         + partial_rules
                 await ctx.send(partial_rules)
         else:
@@ -86,16 +86,16 @@ class Rules(commands.Cog):
 
     @commands.guild_only()
     @commands.has_permissions(manage_messages=True)
-    @commands.group(name="lovset")
+    @commands.group(name="set_rule")
     async def _rule_settings(self, ctx):
         """
-        Innstillinger for regler.
+        Settings for rules
         """
         if ctx.invoked_subcommand is None:
             await ctx.invoke(self.bot.get_command('help'),
                              ctx.command.qualified_name)
 
-    @_rule_settings.command(name="ny")
+    @_rule_settings.command(name="new")
     async def newrules(self, ctx, lov, *, newrule: str=None):
         """
         Legger til et nytt sett med regler i lovherket.
@@ -104,14 +104,14 @@ class Rules(commands.Cog):
         added = rules.add_rule(lov, newrule)
 
         if not added:
-            await ctx.send("Det finnes allerede regler med det navnet.")
+            await ctx.send("There is no rules with that name.")
         else:
-            await ctx.send("Regler laget")
+            await ctx.send("Rules stored")
 
     @_rule_settings.command(name="plaintext")
     async def plaintext(self, ctx, lov):
         """
-        Sender reglene så de enkelt kan kopieres med formatering.
+        Sends the rules so they can be presented with formatting
         """
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
         rule_text, date = rules.get_rule_text(lov)
@@ -121,24 +121,24 @@ class Rules(commands.Cog):
         else:
             await ctx.send("```\n" + rule_text + "\n```")
 
-    @_rule_settings.command(name="fjern")
+    @_rule_settings.command(name="remove")
     async def removerules(self, ctx, lov):
         """
-        Fjerner regler fra lovherket.
+        Removes rules
         """
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
         await self._remove_reactions(ctx, lov)
         removed = rules.remove_rule(lov)
 
         if removed:
-            await ctx.send("Regler fjernet")
+            await ctx.send("Rule removed")
         else:
-            await ctx.send("Reglene du skrev inn finnes ikke")
+            await ctx.send("The rule you typed doesnt exist")
 
-    @_rule_settings.command(name="oppdater")
+    @_rule_settings.command(name="update")
     async def updaterules(self, ctx, lov, *, newrule):
         """
-        Oppdaterer lover i lovherket.
+        Update rules.
         """
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
         edited = rules.edit_rule(lov, newrule)
@@ -152,19 +152,19 @@ class Rules(commands.Cog):
     @_rule_settings.command(name="default")
     async def set_default_rule(self, ctx, lov):
         """
-        Setter default regler.
+        Sets default
         """
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
         rule_text, date = rules.get_rule_text(lov)
 
         if rule_text is None:
-            await ctx.send(f'Den regelen er ikke i lovherket.\n\n' +
-                            '**Liste over lovene i lovherket:**\n' +
+            await ctx.send(f'This rule does not exist.\n\n' +
+                            '**Rules:**\n' +
                             f'{rules.get_rules_formatted()}')
             return
 
         rules.change_setting("default_rule", lov.lower())
-        await ctx.send(f'{lov} er nå serverens default regel')
+        await ctx.send(f'{lov} is now the servers default rule')
 
     """
     Auto rules
@@ -175,7 +175,7 @@ class Rules(commands.Cog):
     @commands.group(name="autoset")
     async def _auto_settings(self, ctx):
         """
-        Innstillinger for automatisk regeloppdatering.
+        Settings for automatic rule-updates
         """
         if ctx.invoked_subcommand is None:
             await ctx.invoke(self.bot.get_command('help'),
@@ -184,19 +184,19 @@ class Rules(commands.Cog):
     @_auto_settings.command(name="post")
     async def postauto(self, ctx, lov):
         """
-        Sender en melding som automatisk oppdateres når reglene oppdateres.
+        Sends a message that auto-updates when rules updates
         """
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
         rule_text, date = rules.get_rule_text(lov)
 
         if rule_text is None:
-            await ctx.send('Sjekk at reglene finnes.\n' +
-                           '**Liste over lovene i lovherket:**\n' +
+            await ctx.send('Check that the rule exist.\n' +
+                           '**Rules:**\n' +
                            f'{rules.get_rules_formatted()}')
             return
 
         if rule_text == "":
-            await ctx.send("Den regelen er helt tom.")
+            await ctx.send("This rule is empty.")
             return
 
         embed = await self._create_embed(rule_text, date)
@@ -205,21 +205,21 @@ class Rules(commands.Cog):
                                        lov,
                                        f'{self._format_message_link(msg)}')
 
-        conf_msg = await ctx.send("Meldingen oppdateres nå automatisk")
+        conf_msg = await ctx.send("Message is now updating")
         await asyncio.sleep(5)
         await conf_msg.delete()
 
     @_auto_settings.command(name="add")
     async def autorules(self, ctx, lov, link):
         """
-        Setter en gammel melding til å automatisk oppdateres når regler endres.
+        Makes an old message automatically update
         """
         msg = await self._get_linked_message(ctx, link)
         if msg is None:
-            await ctx.send("Klarte ikke finne meldingen")
+            await ctx.send("Didnt find the message")
             return
         if msg.author != self.bot.user:
-            await ctx.send("Sjekk at meldingen tilhører botten")
+            await ctx.send("Ensure the message is one of this bots messages")
             return
 
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
@@ -228,28 +228,28 @@ class Rules(commands.Cog):
                                        f'{self._format_message_link(msg)}')
 
         if added == -1:
-            await ctx.send("Melding allerede satt til å oppdateres automatisk")
+            await ctx.send("Message already set to update")
         elif added:
-            await ctx.send("Melding satt til å oppdateres automatisk")
+            await ctx.send("Message set to update")
         else:
-            await ctx.send("Reglene du skrev inn finnes ikke")
+            await ctx.send("The rule doesnt exist")
 
-        await ctx.send("Oppdaterer meldinger")
+        await ctx.send("Updating messages")
         await self._update_messages(ctx, lov)
-        await ctx.send("Oppdatert")
+        await ctx.send("Updated")
 
-    @_auto_settings.command(name="liste")
+    @_auto_settings.command(name="list")
     async def _auto_list(self, ctx):
         """
-        Gir en liste over meldinger som er satt til å oppdateres automatisk.
+        Lists auto-updating messages
         """
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
         auto_update_messages = rules.get_settings('auto_update')
 
-        list_message = '**Meldinger satt til autooppdatering:**\n'
+        list_message = '**Messages that are auto-updating:**\n'
 
         if len(auto_update_messages) == 0:
-            await ctx.send("Ingen meldinger er satt til autooppdatering")
+            await ctx.send("No message is set to auto-update")
             return
 
         for message in auto_update_messages:
@@ -257,26 +257,26 @@ class Rules(commands.Cog):
 
         await ctx.send(list_message)
 
-    @_auto_settings.command(name="fjern")
+    @_auto_settings.command(name="remove")
     async def remove_auto(self, ctx, link):
         """
-        Fjerner en melding fra lista av meldinger som oppdateres automatisk.
+        Removes an auto-updating message from the list
         """
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
         removed = rules.remove_link_setting("auto_update", "link", link)
         if removed:
-            await ctx.send("autooppdatering fjernet")
+            await ctx.send("auto-update removed")
         else:
-            await ctx.send("Sjekk at linken er i bruk med §auto liste")
+            await ctx.send("Check the link with §auto list")
 
-    @_auto_settings.command(name="fiks")
+    @_auto_settings.command(name="fix")
     async def fixauto(self, ctx):
         """
-        Prøver å oppdatere meldingene som skal oppdateres automatisk.
+        Runs a manual update on auto-updating messagges
         """
-        await ctx.send("Oppdaterer meldinger")
+        await ctx.send("Updating messages")
         await self._update_messages(ctx)
-        await ctx.send("Oppdatert")
+        await ctx.send("Updated")
 
     """
     React rules
@@ -286,61 +286,61 @@ class Rules(commands.Cog):
     @commands.group(name="reactset")
     async def _react_settings(self, ctx):
         """
-        Innstillinger for react-regles.
+        Settings for react-rules.
         """
         if ctx.invoked_subcommand is None:
             await ctx.invoke(self.bot.get_command('help'),
                              ctx.command.qualified_name)
 
-    @_react_settings.command(name="oppdater")
+    @_react_settings.command(name="update")
     async def edit_alternate(self, ctx, lov, *, newrule):
         """
-        Oppdaterer reaksjons-regler i lovherket.
+        Updates react-rules
         """
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
         edited = rules.edit_rule(lov, newrule, alternate=True)
         if edited:
-            await ctx.send("Alternative regler oppdatert")
+            await ctx.send("Alternate rules updated")
         else:
-            await ctx.send("Sjekk at du skrev riktig.")
+            await ctx.send("Ensure you typed the correct rule.")
 
-    @_react_settings.command(name="fjern")
+    @_react_settings.command(name="remove")
     async def remove_alternate(self, ctx, lov):
         """
-        Fjerner reaksjons-regler fra lovherket.
+        Removes rect-rules
         """
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
         removed = rules.remove_rule(lov, alternate=True)
         if removed:
-            await ctx.send("Alternative regler fjernet")
+            await ctx.send("Alternate rules removed")
         else:
-            await ctx.send("Reglene du skrev inn finnes ikke")
+            await ctx.send("The rule doesnt exist")
 
-    @_react_settings.command(name="vis")
+    @_react_settings.command(name="show")
     async def show_alternate(self, ctx, lov: str=None):
         """
-        Viser reaksjons-regler fra lovherket.
+        Shows react-rules
         """
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
         rule_text, date = rules.get_rule_text(lov, alternate=True)
         if rule_text is not None:
             await ctx.send("```\n" + rule_text + "\n```")
         else:
-            await ctx.send('**Liste over react-regler i lovherket:**\n' +
+            await ctx.send('**Lists react-rules:**\n' +
                            f'{rules.get_rules_formatted(alternate=True)}')
 
     @_react_settings.command(name="liste")
     async def _react_list(self, ctx):
         """
-        Gir en liste over meldinger som er satt til å oppdateres automatisk.
+        Lists auto-updating react-rules
         """
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
         react_messages = rules.get_settings('react_rules')
 
-        list_message = '**Meldinger med react-regler:**\n'
+        list_message = '**Messages with react-rules:**\n'
 
         if len(react_messages) == 0:
-            await ctx.send("Ingen meldinger er satt opp for reacts")
+            await ctx.send("No meassage is setup with react-rules")
             return
 
         for message in react_messages:
@@ -351,11 +351,11 @@ class Rules(commands.Cog):
     @_react_settings.command(name="link")
     async def link_alternate(self, ctx, lov, link):
         """
-        Setter en gammel melding til å automatisk oppdateres når regler endres.
+        Converts an old message to updates with alternate rules
         """
         msg = await self._get_linked_message(ctx, link)
         if msg is None:
-            await ctx.send("Klarte ikke finne meldingen")
+            await ctx.send("Didnt find the message")
             return
 
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
@@ -368,38 +368,38 @@ class Rules(commands.Cog):
             json.dump(self._react_messages, f, indent=4)
 
         if added == -1:
-            await ctx.send("Melding allerede satt opp for reaksjoner")
+            await ctx.send("Message already set up for reactions")
         elif added:
             try:
                 await msg.clear_reactions()
                 await asyncio.sleep(1)
                 await msg.add_reaction(self.emoji)
-                await ctx.send("reaksjonsregler lagt til")
+                await ctx.send("react-rules added")
             except:
-                await ctx.send("Får ikke reacta")
+                await ctx.send("I dont have permission to react")
         else:
-            await ctx.send("Reglene du skrev inn finnes ikke")
+            await ctx.send("Rule doesnt exist")
 
     @_react_settings.command(name="unlink")
     async def unlink_alternate(self, ctx, message_link):
         """
-        Fjerner en reaksjons-regler til en reaksjon på en melding lovherket.
+        Removes a ract rule for react-rules
         """
 
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
 
         msg = await self._get_linked_message(ctx, message_link)
         if msg is None:
-            await ctx.send("Sjekk at linken er gyldig")
+            await ctx.send("Ensure the link is valid")
             return
         link = self._format_message_link(msg)
 
         await self._remove_reactions(ctx, link)
         removed = rules.remove_link_setting("react_rules", "link", link)
         if removed:
-            await ctx.send("Reaksjon-regler fjernet")
+            await ctx.send("React-rules removed")
         else:
-            await ctx.send("Meldingen var ikke satt til autooppdatering")
+            await ctx.send("Message wasnt set up as  react-rule")
 
     """
     Events
@@ -439,8 +439,8 @@ class Rules(commands.Cog):
         context = message.channel
 
         if rule_text is None:
-            await context.send('**Du må sette default før dette fungerer\n' +
-                               'Liste over lovene i lovherket:**\n' +
+            await context.send('**You need to set up a default rule first\n' +
+                               'Rules:**\n' +
                                f'{rules.get_rules_formatted()}')
             return
 
@@ -598,7 +598,7 @@ class Rules(commands.Cog):
 
                 updated_text, date = rules.get_rule_text(message["name"])
                 if updated_text is None:
-                    await ctx.send('Fant ikke en regel med følgende navn:\n' +
+                    await ctx.send('Didnt find a rule with this name:\n' +
                                    f'{message["name"]}.')
                     continue
 
@@ -618,23 +618,6 @@ class Rules(commands.Cog):
         embed.timestamp = datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
 
         return embed
-
-    @commands.command(name='embed', hidden=True)
-    async def _test(self, ctx):
-        try:
-            embed = discord.Embed(title="Grunnreglene for /r/Norge", colour=discord.Colour(0xD9C04D), timestamp=datetime.now())
-
-            embed.set_author(name="LovHerket", icon_url="https://images-ext-2.discordapp.net/external/CLn-yVj427nAOadeqchtoKz4O2KZ0hNKP6kL0g6zv_c/%3Fsize%3D1024/https/cdn.discordapp.com/avatars/413267882496098305/3dc2c25811a515257399c6b5144b7700.png")
-            embed.set_footer(text="Sist oppdatert")
-
-            embed.add_field(name="Generelt", value="**§  1**: Denne discordserveren er norskspråklig, så vi holder oss til norsk så langt det går.*\n**§  2**: Sjekk pinned messages, her finner du både informasjon og underholdning.\n")
-            embed.add_field(name="Krav til oppførsel", value="**§  3**: Ikke spam - vi slår særlig ned på pingspam. \n**§  4**: Hold deg til riktig kanal. \n**§  5**: Forhold deg til norsk lov. \n**§  6**: Ingen rasisme, homofobi, antisemittisme, diskriminering eller andre hatytringer.\n**§  7**: Ingen personangrep, ingen doxxing. \n**§  8**: Ikke lag kvalme eller oppfør deg på en måte som kun virker tergende og forstyrrende. \n**§  9**: Ingen heksejaging/brigadering.\n**§ 10**: Ikke noe støtende eller ubehagelige megmeger/media (Eksempler: Mobbing, gore, unødvendig slemhet) eller pornografi.")
-            embed.add_field(name="Diverse", value="**§ 11**: Ingen posting av invitasjonslinker til andre discordservere uten godkjenning fra mods/admins (bruk gjerne <@372155256341135360> for dette). \n**§ 12**: <#298511909236375552> har noe annerledes håndheving av visse regler, så se pin i kanalen for egne regler.\n**§ 13**: NSFW megmeger kan postes i <#398969290662871041>, men vær anstendig. NSFL innhold er ikke tillatt. \n**§ 14**: Moderering blir ikke diskutert offentlig, dette tas gjennom <@372155256341135360>.")
-
-            msg = await ctx.send(embed=embed)
-            return msg
-        except Exception as e:
-            print(e)
 
 
 def remove_duplicates(dupe_list):

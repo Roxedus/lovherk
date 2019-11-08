@@ -48,7 +48,7 @@ class LovHerk(commands.Bot):
             pass
 
         elif isinstance(err, commands.NoPrivateMessage):
-            await ctx.send("Denne kommandoen er ikke tilgjengelig i DMs")
+            await ctx.send("This command is not available in DM's")
 
         elif isinstance(err, commands.CheckFailure):
             pass
@@ -78,6 +78,7 @@ class LovHerk(commands.Bot):
 def run_bot():
     bot = LovHerk()
     bot.run()
+
 
 if __name__ == '__main__':
     run_bot()
