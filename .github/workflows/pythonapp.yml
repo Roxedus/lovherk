@@ -8,8 +8,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1        
     - name: Build the Docker image
-      run: |
-        docker build -t ${{ github.repository }}:en_US .       
+      run: docker build -t roxedus/loveherk:en_US .       
  
     - name: Login to registry
       env:
