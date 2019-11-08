@@ -8,7 +8,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1        
     - name: Build the Docker image
-      run: docker build -t docker.pkg.github.com/roxedus/loveherk/bot:en_US -t bot:en_US.       
+      run: docker build -t docker.pkg.github.com/roxedus/loveherk/bot:en_US -t bot:en_US .       
  
     - name: Login to registry
       run: echo ${{ secrets.GH_PACK_TOKEN }} | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
