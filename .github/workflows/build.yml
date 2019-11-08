@@ -15,4 +15,4 @@ jobs:
       
     - name: Pushes the Docker image
       if: github.event_name != 'pull_request' && contains(github.ref, 'actions') != 'true'
-      run: docker push docker.pkg.github.com/roxedus/loveherk/bot:en_US
+      run: docker push docker.pkg.github.com/Roxedus/loveherk/bot:en_US
