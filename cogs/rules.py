@@ -117,7 +117,7 @@ class Rules(commands.Cog):
         rule_text, date = rules.get_rule_text(lov)
 
         if rule_text is None:
-            await ctx.send("Sjekk at du skrev riktig.")
+            await ctx.send("Ensure you typed the correct rule.")
         else:
             await ctx.send("```\n" + rule_text + "\n```")
 
@@ -143,11 +143,11 @@ class Rules(commands.Cog):
         rules = RuleManager(ctx.guild.id, self.SERVERS_PATH)
         edited = rules.edit_rule(lov, newrule)
         if edited:
-            await ctx.send("Oppdaterer meldinger")
+            await ctx.send("Updates messages")
             await self._update_messages(ctx, lov)
-            await ctx.send("Regler oppdatert")
+            await ctx.send("Messages updated")
         else:
-            await ctx.send("Sjekk at du skrev riktig.")
+            await ctx.send("Ensure you typed the correct rule.")
 
     @_rule_settings.command(name="default")
     async def set_default_rule(self, ctx, lov):
@@ -615,7 +615,7 @@ class Rules(commands.Cog):
         embed.set_author(name=self.bot.user.name, icon_url=avatar)
         embed.description = text
         embed.set_footer(text='Last update')
-        embed.set_image(url='https://i.imgur.com/1CJ1KO0.png')
+        #embed.set_image(url='https://i.imgur.com/1CJ1KO0.png')
         embed.timestamp = datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
 
         return embed
