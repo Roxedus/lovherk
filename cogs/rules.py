@@ -615,6 +615,7 @@ class Rules(commands.Cog):
         embed.set_author(name=self.bot.user.name, icon_url=avatar)
         embed.description = text
         embed.set_footer(text='Last update')
+        embed.set_image(url='https://i.imgur.com/1CJ1KO0.png')
         embed.timestamp = datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
 
         return embed
