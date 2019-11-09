@@ -611,11 +611,11 @@ class Rules(commands.Cog):
                                              static_format='png',
                                              size=1024)
 
-        embed = discord.Embed(color=0xD9C04D)
+        embed = discord.Embed(color=0xff5d27)
         embed.set_author(name=self.bot.user.name, icon_url=avatar)
         embed.description = text
-        embed.set_footer(text='Last update')
-        #embed.set_image(url='https://i.imgur.com/1CJ1KO0.png')
+        embed.set_footer(text='Latest update')
+        embed.set_image(url='https://i.imgur.com/1CJ1KO0.png')
         embed.timestamp = datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
 
         return embed
