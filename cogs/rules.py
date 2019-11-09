@@ -614,7 +614,7 @@ class Rules(commands.Cog):
         embed = discord.Embed(color=0xD9C04D)
         embed.set_author(name=self.bot.user.name, icon_url=avatar)
         embed.description = text
-        embed.set_footer(text='Sist oppdatert')
+        embed.set_footer(text='Last update')
         embed.timestamp = datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
 
         return embed
