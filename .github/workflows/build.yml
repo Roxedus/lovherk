@@ -14,4 +14,4 @@ jobs:
       run: echo ${{ secrets.GH_PACK_TOKEN }} | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
       
     - name: Pushes the Docker image
-      run: docker push docker.pkg.github.com/roxedus/loveherk/bot
+      run: docker push docker.pkg.github.com/roxedus/lovherk/bot
