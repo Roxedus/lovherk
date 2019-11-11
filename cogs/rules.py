@@ -612,7 +612,7 @@ class Rules(commands.Cog):
                                              size=1024)
 
         embed = discord.Embed(color=0xff5d27)
-        embed.set_author(name=self.bot.user.name, icon_url=avatar)
+        #embed.set_author(name=self.bot.user.name, icon_url=avatar)
         embed.description = text
         embed.set_footer(text='Latest update')
         #embed.set_image(url='https://i.imgur.com/1CJ1KO0.png')
