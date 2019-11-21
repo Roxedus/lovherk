@@ -4,9 +4,11 @@ LABEL maintainer="Roxedus"
 
 COPY / /app
 
-RUN apt-get update %% apt-get install -y gcc && rm -rf /tmp/* /var/lib/apt/lists/* /var/tmp/*
+RUN apk add --no-cache --virtual=build-dependencies  --update .build-deps gcc musl-dev
 
 RUN python3 -m pip install -r /app/requirements.txt
+
+RUN apk del build-dependencies
 
 WORKDIR /app
 
